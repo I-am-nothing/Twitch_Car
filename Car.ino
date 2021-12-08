@@ -1,6 +1,6 @@
-//#include "Motor.h"
+#include "Motor.h"
 #include <WiFi.h>
-//Motor motor;
+Motor motor;
 WiFiClient client;
 
 const char* ssid = "小騷包魚有C. 菌";
@@ -10,11 +10,9 @@ const uint16_t port = 9700;
 const char * host = "192.168.240.187";
  
 
-int motorNow[4][3] = {
+int motorNow[2][3] = {
   {0, 1, 1024},
-  {0, 0, 1024},
-  {0, 0, 1024},
-  {0, 0, 1024}
+  {1, 0, 1024},
 };
 
 void socketConnect(){
@@ -28,7 +26,7 @@ void setup() {
 
  Serial.begin(115200);
  
-  WiFi.begin(ssid, password);
+  /*WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -37,12 +35,12 @@ void setup() {
   Serial.print("/nWiFi connected with IP: ");
   Serial.println(WiFi.localIP()); 
   
-  socketConnect();
+  socketConnect();*/
 }
 
 void loop() {
   
-  if(client.connected()){
+  /*if(client.connected()){
     client.println("AAA BBB CCC");
     while (client.available()){
       String line = client.readStringUntil('\n'); 
@@ -54,7 +52,7 @@ void loop() {
   else{
     socketConnect();
   }
-  delay(1);
+  delay(1);*/
  
     //Serial.println("Disconnecting...");
     //client.stop();
@@ -65,13 +63,16 @@ void loop() {
 
 
   
-  /*for(int i=-1024; i<1024; i+=5){
+  for(int i=-1024; i<1024; i+=5){
     motorNow[0][2] = abs(i);
+    motorNow[1][2] = abs(i);
     if(i == 1){
       motorNow[0][0] = !motorNow[0][0];
       motorNow[0][1] = !motorNow[0][1];
+      motorNow[1][0] = !motorNow[1][0];
+      motorNow[1][1] = !motorNow[1][1];
     }
     motor.setMotor(motorNow);
-    delay(10);
-  }*/
+    delay(100);
+  }
 }
