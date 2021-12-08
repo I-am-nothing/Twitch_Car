@@ -1,3 +1,4 @@
+   
 #include "Motor.h"
 #include <WiFi.h>
 Motor motor;
@@ -40,7 +41,7 @@ void setup() {
 
 void loop() {
   
-  /*if(client.connected()){
+ if(client.connected()){
     client.println("AAA BBB CCC");
     while (client.available()){
       String line = client.readStringUntil('\n'); 
@@ -52,12 +53,64 @@ void loop() {
   else{
     socketConnect();
   }
-  delay(1);*/
+  delay(1);
  
     //Serial.println("Disconnecting...");
     //client.stop();
  
     //delay(10000);
+
+
+    void runAsyncSocketClient(){
+  if(aClient)//client already exists
+    return;
+
+  aClient = new AsyncClient();
+  if(!aClient)//could not allocate client
+    return;
+
+  aClient->onError([](void * arg, AsyncClient * client, int error){
+    Serial.println("Connect Error");
+    aClient = NULL;
+    delete client;
+  }, NULL);
+
+  aClient->onConnect([](void * arg, AsyncClient * client){
+    Serial.println("Connected");
+    aClient->onError(NULL, NULL);
+
+    client->onDisconnect([](void * arg, AsyncClient * c){
+      Serial.println("Disconnected");
+      aClient = NULL;
+      delete c;
+    }, NULL);
+
+    client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
+      //Serial.print("\r\nData: ");
+      //Serial.println(len);
+      //uint8_t * d = (uint8_t*)data;
+      for(size_t i=0; i<len;i++){
+       ((char*) data)[i];
+      }
+      //Serial.println((char*) data);
+      //c->write((char*) data, len);
+      //c->write("\n");
+    }, NULL);
+
+    //send the request
+    //client->write("Hello\n");
+  }, NULL);
+
+  aClient->setAckTimeout(5000);
+
+  if(!aClient->connect(WiFi.gatewayIP(), port)){
+    Serial.println("Connect Failed");
+    AsyncClient * client = aClient;
+    aClient = NULL;
+    delete client;
+  }
+}
+
 
    
 
@@ -72,7 +125,8 @@ void loop() {
       motorNow[1][0] = !motorNow[1][0];
       motorNow[1][1] = !motorNow[1][1];
     }
-    motor.setMotor(motorNow);
+    motor.setMotor(motorNow); 
     delay(100);
   }
 }
+}   
