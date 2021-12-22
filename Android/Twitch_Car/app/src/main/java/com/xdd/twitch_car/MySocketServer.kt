@@ -28,41 +28,36 @@ class MySocketServer{
 
     constructor(context: Context){
         this.context = context.applicationContext
-        if(mySocketServer == null){
-            Toast.makeText(this.context, "You haven't initialize socket server yet", Toast.LENGTH_SHORT).show()
-            throw Exception("You haven't initialize socket server yet!")
-        }
     }
 
     constructor(context: Context, serverPort: Int){
         this.context = context.applicationContext
 
         mySocketServer = ServerSocket(serverPort)
-        Toast.makeText(this.context, "Socket server starts listening devices", Toast.LENGTH_SHORT).show()
     }
 
     fun deviceAcceptListener(client: (MyClient) -> Unit){
         Thread {
             while (true){
-                if(mySocketServer == null){
-                    break
+                if(mySocketServer != null){
+                    try{
+                        val socket = mySocketServer!!.accept()
+                        socket.setPerformancePreferences(1, 2, 0)
+                        socket.tcpNoDelay = true;
+
+                        val myClient = MyClient(socket){
+                            client(it)
+                        }
+
+                        clientList.add(myClient)
+                        Log.d("Client Connected", "Client connected : ${socket.inetAddress.hostAddress}")
+                    }
+                    catch (e: Exception){
+                        Log.e("FUCK", e.message.toString())
+                    }
                 }
-
-                try{
-                    val socket = mySocketServer!!.accept()
-                    socket.setPerformancePreferences(1, 2, 0)
-                    //socket.soTimeout = 1000
-                    socket.tcpNoDelay = true;
-
-                    val myClient = MyClient(socket)
-
-                    clientList.add(myClient)
-                    Log.d("Client Connected", "Client connected : ${socket.inetAddress.hostAddress}")
-
-                    client(myClient)
-                }
-                catch (e: Exception){
-                    Log.e("FUCK", e.message.toString())
+                else{
+                    Thread.sleep(500)
                 }
             }
         }.start()
@@ -73,15 +68,6 @@ class MySocketServer{
         private var mySocketServer: ServerSocket? = null
 
         private val clientList = ArrayList<MyClient>()
-
-        fun checkSocketServerStart(ok: () -> Unit){
-            Timer().schedule(0, 500){
-                if(mySocketServer != null){
-                    ok()
-                    this.cancel()
-                }
-            }
-        }
 
         fun stopSocketServer(){
             clientList.forEach {
@@ -95,29 +81,38 @@ class MySocketServer{
     }
 }
 
-class MyClient(var socket: Socket?){
+class MyClient(var socket: Socket?, identity: (MyClient) -> Unit){
 
-    var who: String? = ""//null
+    var who: String? = null
     private val `in` = DataInputStream(socket?.getInputStream())
     //private val `in` = BufferedReader(InputStreamReader(socket?.getInputStream()))
     private var command = ""
 
     init {
-        /*val ask = Timer().schedule(100, 1000){
+        Timer().schedule(100, 1000){
+            if(who != null){
+                Log.e("WHO", who!!)
+                identity(this@MyClient)
+                this.cancel()
+            }
+
             sendMessage("WHO ?")
         }
         Thread{
-            val `in` = BufferedReader(InputStreamReader(socket?.getInputStream()))
-            var inputLine: String
-            while (`in`.readLine().also{ inputLine = it} != null) {
-                Log.d("FUCK", "WHO:${inputLine}")
-                val command = inputLine.split(" ")
-                if(command.size != 2 && command[0] == "WHO"){
-                    who = command[1]
+            while (who == null){
+                var buffer = ""
+                do {
+                    buffer += byteArrayOf(`in`.readByte()).decodeToString()
+                } while (buffer[buffer.length - 1] != '\n')
+                Log.e("bytes", buffer)
+
+                buffer.split("$").let {
+                    if(it[0] == "WHO"){
+                        who = it[1]
+                    }
                 }
             }
-            ask.cancel()
-        }.start()*/
+        }.start()
     }
 
     fun getIpAddress(): String?{
@@ -139,96 +134,48 @@ class MyClient(var socket: Socket?){
                     break
                 }
                 else -> {
-                    do {
-                        buffer += byteArrayOf(`in`.readByte()).decodeToString()
-                    } while (buffer[buffer.length - 1] != '\n')
-                    Log.e("bytes", buffer)
+                    try{
+                        do {
+                            buffer += byteArrayOf(`in`.readByte()).decodeToString()
+                        } while (buffer[buffer.length - 1] != '\n')
+                        Log.e("bytes", buffer)
+                        message(buffer)
 
-                    buffer.split("$").let {
-                        if(it.isNotEmpty()){
-                            when(it[0]){
-                                "IMAGE" -> {
-                                    Log.e("IMAGE", "in")
-                                    val imageBytes = ByteArray(it[1].toInt())
-                                    var imageLength = 0
-                                    while (imageLength < imageBytes.size){
-                                        imageLength += `in`.read(imageBytes, imageLength, imageBytes.size - imageLength)
-                                        val chunkCheck = imageBytes.toString(Charset.forName("UTF-8"))
-                                        val imageDoneIndex = chunkCheck.indexOf("IMAGE DONE\n")
-                                        if(imageDoneIndex != -1){
-                                            imageLength = imageDoneIndex
-                                            buffer = chunkCheck.substring(imageDoneIndex + 11)
-                                            break
+                        buffer.split("$").let {
+                            if(it.isNotEmpty()){
+                                when(it[0]){
+                                    "IMAGE" -> {
+                                        Log.e("IMAGE", "in")
+                                        val imageBytes = ByteArray(it[1].toInt())
+                                        var imageLength = 0
+                                        while (imageLength < imageBytes.size){
+                                            imageLength += `in`.read(imageBytes, imageLength, imageBytes.size - imageLength)
+                                            val chunkCheck = imageBytes.toString(Charset.forName("UTF-8"))
+                                            val imageDoneIndex = chunkCheck.indexOf("IMAGE DONE\n")
+                                            if(imageDoneIndex != -1){
+                                                imageLength = imageDoneIndex
+                                                buffer = chunkCheck.substring(imageDoneIndex + 11)
+                                                break
+                                            }
+                                        }
+
+                                        Log.e("IMAGE", "out")
+
+                                        if(imageLength == imageBytes.size) {
+                                            buffer = ""
+                                        }
+                                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageLength)
+                                        if(bitmap != null){
+                                            image(bitmap)
                                         }
                                     }
-
-                                    //Log.e("IMAGE", Base64.encodeToString(imageBytes, Base64.DEFAULT))
-                                    Log.e("IMAGE", "out")
-
-                                    if(imageLength == imageBytes.size) {
-                                        buffer = ""
-                                    }
-                                    val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageLength)
-                                    if(bitmap != null){
-                                        image(bitmap)
-                                    }
+                                    else -> buffer = ""
                                 }
-                                else -> buffer = ""
                             }
                         }
+                    } catch (e: Exception){
+                        Log.e("ERROR", e.message.toString())
                     }
-
-                    /*val index = inputString.indexOf("\n\r")
-
-                    if(index == -1){
-
-                    }
-                    else{
-                        val input = inputString.substring(0, index)
-
-                        Log.d("INPUT", command)
-                        when(command){
-                            "IMAGE" -> {
-                                val imageBytes = input.toByteArray(Charset.forName("UTF-8"))
-
-                                Log.e("IMAGE_RECEIVE", imageBytes.size.toString())
-
-                                image(BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size))
-                            }
-                            else -> {
-                                when{
-                                    input.contains("COMMAND") -> {
-
-                                    }
-                                    input.contains("IMAGE") -> {
-                                        command = "IMAGE"
-                                    }
-                                    else -> {
-
-                                    }
-                                }
-                            }
-                        }
-                        inputString.deleteRange(0, index)
-                    }*/
-
-                    /*var inputLine: String
-                    while (`in`.readLine().also{ inputLine = it} != null) {
-                        Log.d("COMMAND", inputLine)
-                        Log.e("COMMAND", inputLine.length.toString())
-                        /*val command = inputLine.split(" ")
-
-                        if(command.isNotEmpty()){
-                            when(command[0]){
-                                "IMAGE" -> {
-                                    if(command.size == 2){
-                                        image(getImageStream(command[1].toInt()))
-                                    }
-                                }
-                            }
-                        }
-                        message(inputLine)*/
-                    }*/
                 }
             }
         }.start()
@@ -236,25 +183,25 @@ class MyClient(var socket: Socket?){
 
     fun startCamera(){
         if(who == "CAMERA"){
-            sendMessage("CAMERA START")
+            sendMessage("CAMERA\$START$")
         }
     }
 
     fun stopCamera(){
         if(who == "CAMERA"){
-            sendMessage("CAMERA STOP")
+            sendMessage("CAMERA\$STOP$")
         }
     }
 
     fun startFlashLight(){
         if(who == "CAMERA"){
-            sendMessage("FLASHLIGHT START")
+            sendMessage("FLASHLIGHT\$START$")
         }
     }
 
     fun stopFlashLight(){
         if(who == "CAMERA"){
-            sendMessage("FLASHLIGHT STOP")
+            sendMessage("FLASHLIGHT\$STOP$")
         }
     }
 

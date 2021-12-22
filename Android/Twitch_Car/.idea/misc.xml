@@ -5,8 +5,22 @@
       <map>
         <entry key="../../../../../../layout/custom_preview.xml" value="0.24814814814814815" />
         <entry key="../../../../layout/custom_preview.xml" value="0.19479166666666667" />
+        <entry key="app/src/main/res/drawable/btn_atack_background.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/drawable/btn_power_background.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/btn_power_green_background.xml" value="0.1537037037037037" />
+        <entry key="app/src/main/res/drawable/btn_power_red_background.xml" value="0.3260416666666667" />
+        <entry key="app/src/main/res/drawable/btn_settings_background.xml" value="0.3260416666666667" />
+        <entry key="app/src/main/res/drawable/ic_baseline_power_settings_new_24.xml" value="0.14895833333333333" />
+        <entry key="app/src/main/res/drawable/ic_round_flashlight_on_24.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/drawable/ic_round_image_search_24.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/drawable/ic_round_power_settings_new_24.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/drawable/ic_round_settings_24.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/drawable/light_gray.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/drawable/light_green.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/drawable/light_red.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/drawable/status_bar_white.xml" value="0.1537037037037037" />
         <entry key="app/src/main/res/layout/activity_fullscreen.xml" value="0.16875" />
-        <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
       </map>
     </option>
   </component>

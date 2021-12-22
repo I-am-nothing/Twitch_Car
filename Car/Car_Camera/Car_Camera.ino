@@ -1,7 +1,6 @@
 #include "esp_camera.h"
 #include "AsyncTCP.h"
 #include <WiFi.h>
-#include <base64.h>
 
 #define CAMERA_MODEL_AI_THINKER
 
@@ -14,20 +13,27 @@ unsigned long timer1;
 
 const uint16_t port = 9700;
 
-//WiFiClient client;
+TaskHandle_t Task1;
 AsyncClient* aClient = NULL;
 
-//TaskHandle_t Task1;
+bool flashStatus = false;
+bool cameraStatus = false;
 
 void setUpPin();
 void sendStream();
-void wifiConnect();
-void socketConnect();
-bool cameraInitial();
 void hintLed(int, int);
-void startCameraServer();
-void runSocketStream(void* pvParameters);
 void runAsyncSocketClient();
+
+void Task1_senddata(void * pvParameters ) {
+  while(true) {
+    if(flashStatus){
+      digitalWrite(4, HIGH);
+      delay(50);
+      digitalWrite(4, LOW);
+    }
+    delay(50);
+  }
+}
 
 void setup() {
   // Serial initial
@@ -66,7 +72,7 @@ void setup() {
   }
   
   sensor_t* s = esp_camera_sensor_get();
-  s -> set_framesize(s, FRAMESIZE_QVGA);
+  s -> set_framesize(s, FRAMESIZE_96X96);
   s -> set_hmirror(s, 1); 
   s -> set_vflip(s, 1); 
 
@@ -89,93 +95,14 @@ void setup() {
   Serial.println("IP: " + WiFi.localIP().toString());
   Serial.println("HOST: " + WiFi.gatewayIP().toString());
 
-  timer1 = millis();
+  xTaskCreatePinnedToCore(Task1_senddata, "FLASH", 1000, NULL, 1, &Task1, 1);   
 
-  //xTaskCreatePinnedToCore(runSocketStream, "Task1", 10000, NULL, 1, &Task1, 0);  
+  timer1 = millis();  
 }
 
 void loop() {
   runAsyncSocketClient();
   sendStream();
-  /*if(client.connected()){
-    while (client.available()){
-      String line = client.readStringUntil('\n'); 
-      Serial.print("recieve data => "); 
-      Serial.println(line); 
-    }
-    camera_fb_t* fb = esp_camera_fb_get();
-  if (!fb) {
-    Serial.println("Frame buffer could not be acquired");
-    return;
-  }*/
-
-  //size_t base64EncodeLength = base64::getBase64EncodeLength(fb->len);
-  //char* encodedImage = base64::encode(fb->buf, fb->len, base64EncodeLength);
-  //esp_camera_fb_return(fb);
-  //byte charImage[encodeImage.length() + 1];
-  //encodeImage.getBytes(charImage, encodeImage.length()+1);
-  //Serial.println(base64EncodeLength);
-    
-  /*client.print("IMAGE$");
-  client.print(fb->len);
-  client.println("$");
-
-  client.write(fb->buf, fb->len);
-  esp_camera_fb_return(fb);
-
-  client.println("IMAGE DONE");
-  
-  //free(encodedImage);
-  
-  }
-  else{
-    socketConnect();
-  }*/
-}
-
-void runSocketStream(void * pvParameters){
-  /*while(true){
-    if(client.connected()){
-      Serial.println("I am in side!");
-      sendStream();
-      delay(1000);
-    }
-    else{
-      socketConnect();
-    }
-  }*/
-}
-
-
-void socketConnect(){
-  /*while (!client.connect(WiFi.gatewayIP(), port)) {
-    Serial.println("Connection to host failed");
-    hintLed(1, 850);
-  }*/
-}
-
-bool cameraInitial(){
-  
-  
-  return true;
-}
-
-void setUpPin(){
-  
-}
-
-void wifiConnect(){
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    hintLed(2, 700);
-    Serial.print(".");
-  }
-  Serial.println();
-  Serial.println("WiFi connected");
-  Serial.println("IP: " + WiFi.localIP().toString());
-  Serial.println("HOST: " + WiFi.gatewayIP().toString());
 }
 
 void hintLed(int times, int flashDelay){
@@ -189,6 +116,10 @@ void hintLed(int times, int flashDelay){
 }
 
 void sendStream(){
+  if(!aClient || !cameraStatus){
+    return;
+  }
+  
   if(millis() - timer1 < 10){
     Serial.print("DELAY ");
     Serial.println(aClient->space());
@@ -199,10 +130,6 @@ void sendStream(){
     timer1 = millis();
     Serial.print("WAIT ");
     Serial.println(aClient->space());
-    return;
-  }
-  
-  if(!aClient){
     return;
   }
 
@@ -261,19 +188,46 @@ void runAsyncSocketClient(){
     }, NULL);
 
     client->onData([](void * arg, AsyncClient * c, void * data, size_t len){
-      //Serial.print("\r\nData: ");
-      //Serial.println(len);
-      uint8_t * d = (uint8_t*)data;
-      for(size_t i=0; i<len;i++){
-        Serial.write(d[i]);
-      }
-      //Serial.println((char*) data);
-      //c->write((char*) data, len);
-      //c->write("\n");
-    }, NULL);
+      char input[len];
+      strncpy(input, (char*) data, len);
+      Serial.println(len);
+      Serial.println(input);
 
-    //send the request
-    //client->write("Hello\n");
+      int subStartPos = 0;
+      int index$ = 0;
+
+      if(String(input) == "WHO ?"){
+        c->write("WHO$CAMERA$\n");
+      }
+      else{
+        index$ = String(input).indexOf('$', subStartPos);
+        
+        if(String(input).substring(subStartPos, index$) == "FLASHLIGHT"){
+          Serial.println("input");
+          subStartPos = index$ + 1;
+          index$ = String(input).indexOf('$', subStartPos);
+
+          if(String(input).substring(subStartPos, index$) == "START"){
+            flashStatus = true;
+          }
+          else{
+            flashStatus = false;
+          }
+        }
+        else if(String(input).substring(subStartPos, index$) == "CAMERA"){
+          Serial.println("input");
+          subStartPos = index$ + 1;
+          index$ = String(input).indexOf('$', subStartPos);
+
+          if(String(input).substring(subStartPos, index$) == "START"){
+            cameraStatus = true;
+          }
+          else{
+            cameraStatus = false;
+          }
+        }
+      }
+    }, NULL);
   }, NULL);
 
   aClient->setAckTimeout(5000);

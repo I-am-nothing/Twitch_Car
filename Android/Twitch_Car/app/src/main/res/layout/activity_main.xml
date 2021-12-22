@@ -6,24 +6,156 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Start Server"
+    <ImageView
+        android:id="@+id/camera_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="0dp"
-        android:layout_height="300dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_launcher_background" />
+        app:srcCompat="@drawable/test2_jpg" />
+
+    <ImageButton
+        android:id="@+id/camera_btn"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/btn_atack_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/flash_btn"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.75"
+        app:srcCompat="@drawable/ic_round_camera_24" />
+
+    <ImageButton
+        android:id="@+id/gallery_btn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:background="@drawable/btn_settings_background"
+        app:layout_constraintEnd_toStartOf="@+id/setting_btn"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_round_image_search_24" />
+
+    <ImageButton
+
+        android:id="@+id/flash_btn"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="80dp"
+        android:background="@drawable/btn_atack_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_round_flashlight_on_24" />
+
+    <com.xdd.twitch_car.JoyStick
+        android:id="@+id/main_js"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginBottom="40dp"
+        android:backgroundTint="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/setting_btn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:background="@drawable/btn_settings_background"
+        app:layout_constraintEnd_toStartOf="@+id/power_btn"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_round_settings_24" />
+
+    <ImageButton
+        android:id="@+id/power_btn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/btn_power_red_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_round_power_settings_new_24" />
+
+    <LinearLayout
+        android:id="@+id/motor_ly"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/status_bar_white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintStart_toEndOf="@+id/camera_ly"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Motor"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <View
+            android:id="@+id/motor_light"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginHorizontal="8dp"
+            android:background="@drawable/light_gray" />
+
+        <TextView
+            android:id="@+id/motor_ms"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NAN ms"
+            android:layout_gravity="center_vertical|end"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/camera_ly"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/status_bar_white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Camera"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <View
+            android:id="@+id/camera_light"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginHorizontal="8dp"
+            android:background="@drawable/light_gray" />
+
+        <TextView
+            android:id="@+id/camera_ms"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:text="NAN ms"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

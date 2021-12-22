@@ -47,7 +47,7 @@ class ForceGroundService: Service() {
                     val pendingIntent = PendingIntent.getActivity(this, 87, vocabularyIntent, PendingIntent.FLAG_IMMUTABLE)
                     val notification = NotificationCompat.Builder(baseContext, "XDD1")
                         .setContentTitle("Twitch Car Service Is Running!")
-                        .setContentText("Twitch car can connect service now, IP:${ip}")
+                        .setContentText("Twitch car can connect service now!")
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentIntent(pendingIntent)
                         .build()
