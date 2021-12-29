@@ -19,6 +19,7 @@ import java.nio.CharBuffer
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.*
+import java.util.Base64.getEncoder
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
 
@@ -159,6 +160,8 @@ class MyClient(var socket: Socket?, identity: (MyClient) -> Unit){
                                             }
                                         }
 
+                                        Log.e("IMAGE", imageBytes.toBase64())
+
                                         Log.e("IMAGE", "out")
 
                                         if(imageLength == imageBytes.size) {
@@ -214,4 +217,7 @@ class MyClient(var socket: Socket?, identity: (MyClient) -> Unit){
         }
         return false
     }
+
+    fun ByteArray.toBase64(): String =
+        String(Base64.encode(this, Base64.DEFAULT))
 }

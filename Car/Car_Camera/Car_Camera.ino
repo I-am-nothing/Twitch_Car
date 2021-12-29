@@ -9,8 +9,6 @@
 const char* ssid = "小騷包魚有C. 菌";
 const char* password =  "sakun921118";
 
-unsigned long timer1;
-
 const uint16_t port = 9700;
 
 TaskHandle_t Task1;
@@ -62,7 +60,7 @@ void setup() {
   config.xclk_freq_hz = 19000000;
   config.pixel_format = PIXFORMAT_JPEG;
   config.frame_size = FRAMESIZE_UXGA;
-  config.jpeg_quality = 25;
+  config.jpeg_quality = 20;
   config.fb_count = 1;
 
   esp_err_t err = esp_camera_init(&config);
@@ -72,7 +70,7 @@ void setup() {
   }
   
   sensor_t* s = esp_camera_sensor_get();
-  s -> set_framesize(s, FRAMESIZE_96X96);
+  s -> set_framesize(s, FRAMESIZE_VGA);
   s -> set_hmirror(s, 1); 
   s -> set_vflip(s, 1); 
 
@@ -96,8 +94,6 @@ void setup() {
   Serial.println("HOST: " + WiFi.gatewayIP().toString());
 
   xTaskCreatePinnedToCore(Task1_senddata, "FLASH", 1000, NULL, 1, &Task1, 1);   
-
-  timer1 = millis();  
 }
 
 void loop() {
@@ -119,22 +115,12 @@ void sendStream(){
   if(!aClient || !cameraStatus){
     return;
   }
-  
-  if(millis() - timer1 < 10){
-    Serial.print("DELAY ");
-    Serial.println(aClient->space());
-    return;
-  }
 
   if(!aClient->canSend()){
-    timer1 = millis();
     Serial.print("WAIT ");
     Serial.println(aClient->space());
     return;
   }
-
-  Serial.print("IMAGE IN ");
-  Serial.println(aClient->space());
 
   aClient->write("IMAGE DONE\n");
 
@@ -143,23 +129,26 @@ void sendStream(){
     Serial.println("Frame buffer could not be acquired");
     return;
   }
-
-  //size_t base64EncodeLength = base64::getBase64EncodeLength(fb->len);
-  //char* encodedImage = base64::encode(fb->buf, fb->len, base64EncodeLength);
-  
-  //byte charImage[encodeImage.length() + 1];
-  //encodeImage.getBytes(charImage, encodeImage.length()+1);
-  //Serial.println(base64EncodeLength);
   
   char imageCommand[16];
   sprintf(imageCommand, "IMAGE$%06d$", fb->len);
     
   aClient->write(imageCommand);
   aClient->write("\n");
-  aClient->write((const char*) fb->buf, fb->len);
-  esp_camera_fb_return(fb);
   
-  timer1 = millis();
+  int fbIndex = 0;
+
+  while(fbIndex < fb->len){
+    if(aClient->canSend()){
+      int len = min(aClient->space(), (fb->len - fbIndex)); 
+      aClient->write(((char*)fb->buf) + fbIndex, len);
+      fbIndex += len;
+    }
+  }
+  
+  //aClient->write((const char*) fb->buf, fb->len);
+  
+  esp_camera_fb_return(fb);
 }
 
 
