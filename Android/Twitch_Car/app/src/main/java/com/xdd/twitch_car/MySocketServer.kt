@@ -160,7 +160,7 @@ class MyClient(var socket: Socket?, identity: (MyClient) -> Unit){
                                             }
                                         }
 
-                                        Log.e("IMAGE", imageBytes.toBase64())
+                                        //Log.e("IMAGE", imageBytes.toBase64())
 
                                         Log.e("IMAGE", "out")
 
